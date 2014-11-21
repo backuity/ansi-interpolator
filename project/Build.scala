@@ -45,6 +45,31 @@ object AnsiInterpolatorBuild extends Build {
 
   lazy val tests = Project("tests",
     file("tests"),
-    settings = buildSettings ++ Seq(publishArtifact := false)
+    settings = buildSettings ++ Seq(publishArtifact := false,
+
+      // for testing with partest
+      libraryDependencies += "org.scala-lang.modules" %% "scala-partest-interface" % "0.4.0",
+
+      // the actual partest the interface calls into -- must be binary version close enough to ours
+      // so that it can link to the compiler/lib we're using (testing)
+      libraryDependencies += "org.scala-lang.modules" %% "scala-partest" % "1.0.1" % "test",
+
+      fork in Test := true,
+
+//      javaOptions in Test += "-Xmx1G",
+
+      testFrameworks += new TestFramework("scala.tools.partest.Framework"),
+
+      definedTests in Test += new sbt.TestDefinition( "partest",
+        // marker fingerprint since there are no test classes to be discovered by sbt:
+        new sbt.testing.AnnotatedFingerprint {
+          def isModule = true
+          def annotationName = "partest"
+        },
+        true,
+        Array()
+      )
+
+    )
   ) dependsOn macros
 }
