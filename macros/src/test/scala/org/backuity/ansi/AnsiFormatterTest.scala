@@ -24,12 +24,23 @@ class AnsiFormatterTest extends JunitMatchers {
   }
 
   @Test
+  def doublePercentShouldEscapePercent(): Unit = {
+    ansiPart("a double %%price", ctx) must_== "a double %price"
+  }
+
+  @Test
   def singlePercentMustBeLeftVerbatim(): Unit = {
     ansiPart("a trailing %", ctx) must_== "a trailing %"
     ansiPart("a % alone", ctx) must_== "a % alone"
   }
 
   import AnsiFormatter.ParsingError
+
+  @Test
+  def missingOpenBracket(): Unit = {
+    ansiPart("a missing %red bracket", ctx) must throwA[ParsingError]
+      .withMessage("missing '{' for tag red")
+  }
 
   @Test
   def parsingErrorMustReportErrorOffset(): Unit = {

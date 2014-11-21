@@ -8,10 +8,10 @@ object Main {
 
     val str = "haHA"
 
-    println(ansi"%yellow{$str} %bold{%red{so%underline{me}}th}ing %blue{blue}%bold{box}")
+    println(ansi"%yellow{$str} %bold{%red{so%underline{me%%}}th}ing %blue{blue}%bold{box}")
 
-    s"ah $str hello"
-    StringContext("ah ", " hello").standardInterpolator(identity, Seq(str))
+    // ansi wiki syntax
+    // println(ansi"__man **that** rock__")
 
 //    println(ansi"%bold{%redx{$str}")
 //    println(ansi"%bro{$str}")

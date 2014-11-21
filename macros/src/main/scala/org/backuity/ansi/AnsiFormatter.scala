@@ -92,11 +92,30 @@ object AnsiFormatter {
   case class CloseTag(before: String, after: String, idx : Int) extends Lexeme
   case class Nothing(content: String) extends Lexeme
 
-  def scan(str: String) : Lexeme = {
+  def scan(str: String, prefix : String = "") : Lexeme = {
+
     str.indexWhere( c => c == '%' || c == '}' ) match {
-      case -1 => Nothing(str)
-      case idx if str.charAt(idx) == '%' => StartTag(str.substring(0, idx), str.substring(idx + 1), idx)
-      case idx if str.charAt(idx) == '}' => CloseTag(str.substring(0, idx), str.substring(idx + 1), idx)
+      case -1 => Nothing(prefix + str)
+
+      case idx if str.charAt(idx) == '%' =>
+        val before = str.substring(0, idx)
+        val after = str.substring(idx + 1)
+
+        if (idx == str.length - 1) {
+          // trailing '%' are left verbatim
+          Nothing(prefix + str)
+        } else if (str.charAt(idx + 1) == ' ') {
+          // '%' followed by whitespace are left verbatim
+          scan(after, prefix = prefix + before + "%")
+        } else if (str.charAt(idx + 1) == '%') {
+          // double '%' are converted into single '%'
+          scan(/* remove a '%' */after.substring(1), prefix = prefix + before + "%")
+        } else {
+          StartTag(prefix + before, after, idx)
+        }
+
+      case idx if str.charAt(idx) == '}' =>
+        CloseTag(prefix + str.substring(0, idx), str.substring(idx + 1), idx)
     }
   }
 
@@ -106,26 +125,25 @@ object AnsiFormatter {
     scan(part) match {
       case StartTag(before, after, idx) =>
         try {
-            if (after.isEmpty) {
-              // trailing '%' are left verbatim
-              part
-            } else if (after.charAt(0) == ' ') {
-              // '%' followed by whitespace are left verbatim
-              part
-            } else {
-              after.indexOf("{") match {
-                case -1 => throw ParsingError("missing '{' for tag " + after, idx + offset)
-                case bracketIdx =>
-                  val tag = after.substring(0, bracketIdx)
-                  val (openCode, closeCode, color) = findCodesFor(tag, ctx)
+            after.indexOf("{") match {
+              case -1 =>
+                val tag = if( after.indexOf(" ") != -1 ) {
+                  after.substring(0, after.indexOf(" "))
+                } else {
+                  after
+                }
+                throw ParsingError("missing '{' for tag " + tag, idx + offset)
 
-                  // save close code
-                  ctx.push(closeCode, color)
+              case bracketIdx =>
+                val tag = after.substring(0, bracketIdx)
+                val (openCode, closeCode, color) = findCodesFor(tag, ctx)
 
-                  // replace tag by ansi code
-                  before + openCode + ansiPart(after.substring(bracketIdx + 1), ctx,
-                    offset = offset + idx + 1 + bracketIdx + 1)
-              }
+                // save close code
+                ctx.push(closeCode, color)
+
+                // replace tag by ansi code
+                before + openCode + ansiPart(after.substring(bracketIdx + 1), ctx,
+                  offset = offset + idx + 1 + bracketIdx + 1)
             }
           } catch {
             case err : ParsingError => throw err
