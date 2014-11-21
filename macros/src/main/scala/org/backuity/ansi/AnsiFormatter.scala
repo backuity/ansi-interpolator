@@ -11,7 +11,41 @@ object AnsiFormatter {
     def ansi(args: Any*): String = macro ansiImpl
   }
 
-  class AnsiContext(var tagStack : List[String] = Nil, var colorStack : List[Int] = List(9)) {
+  def ansiImpl(c: blackbox.Context)(args: c.Tree*) = {
+    import c.universe._
+
+    val Apply(_, List(Apply(_, partsTree))) = c.prefix.tree
+
+    val parts = partsTree.map {
+      case term @ Literal(Constant(x: String)) => (x, term.pos)
+      case term => c.abort(term.pos, "Expected a String")
+    }
+
+    val ansiCtx = new AnsiContext()
+
+    val newParts = for( (part,pos) <- parts ) yield {
+      try {
+        ansiPart(part, ansiCtx)
+      } catch {
+        case ParsingError(msg, offset) =>
+          c.abort(pos.withPoint(pos.end + offset), msg)
+      }
+    }
+    if( !ansiCtx.isEmpty ) {
+      val msg = ansiCtx.size match {
+        case 1 => "a tag is not closed properly"
+        case more => more + " tags are not closed properly"
+      }
+      c.abort(c.prefix.tree.pos, msg)
+    }
+
+    q"""StringContext($newParts : _*).standardInterpolator(Predef.identity, Seq(..$args))"""
+  }
+
+  class AnsiContext {
+
+    private var tagStack : List[String] = Nil
+    private var colorStack : List[Int] = List(9)
 
     def size = tagStack.size
     def isEmpty = tagStack.isEmpty
@@ -104,36 +138,5 @@ object AnsiFormatter {
 
       case Nothing(content) => content
     }
-  }
-
-  def ansiImpl(c: blackbox.Context)(args: c.Tree*) = {
-    import c.universe._
-
-    val Apply(_, List(Apply(_, partsTree))) = c.prefix.tree
-
-    val parts = partsTree.map {
-      case term @ Literal(Constant(x: String)) => (x, term.pos)
-      case term => c.abort(term.pos, "Expected a String")
-    }
-
-    val ansiCtx = new AnsiContext()
-
-    val newParts = for( (part,pos) <- parts ) yield {
-      try {
-        ansiPart(part, ansiCtx)
-      } catch {
-        case ParsingError(msg, offset) =>
-          c.abort(pos.withPoint(pos.end + offset), msg)
-      }
-    }
-    if( !ansiCtx.isEmpty ) {
-      val msg = ansiCtx.size match {
-        case 1 => "a tag is not closed properly"
-        case more => more + " tags are not closed properly"
-      }
-      c.abort(c.prefix.tree.pos, msg)
-    }
-
-    q"""StringContext($newParts : _*).standardInterpolator(Predef.identity, Seq(..$args))"""
   }
 }
