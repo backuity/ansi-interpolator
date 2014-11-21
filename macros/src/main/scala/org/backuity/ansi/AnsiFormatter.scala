@@ -3,6 +3,7 @@ package org.backuity.ansi
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 import scala.util.control.NonFatal
+import AnsiCodes._
 
 object AnsiFormatter {
 
@@ -76,10 +77,10 @@ object AnsiFormatter {
 
   /** @return (openCode, closeCode, color) */
   def findCodesFor(tag: String, ctx: AnsiContext) : (String,String, Int) = tag match {
-    case "bold"      => ("\u001b[1m", "\u001b[22m", ctx.color)
-    case "italic"    => ("\u001b[3m", "\u001b[23m", ctx.color)
-    case "underline" => ("\u001b[4m", "\u001b[24m", ctx.color)
-    case "blink"     => ("\u001b[5m", "\u001b[25m", ctx.color)
+    case "bold"      => (BOLD,      BOLD_OFF,      ctx.color)
+    case "italic"    => (ITALIC,    ITALIC_OFF,    ctx.color)
+    case "underline" => (UNDERLINE, UNDERLINE_OFF, ctx.color)
+    case "blink"     => (BLINK,     BLINK_OFF,     ctx.color)
     case color       => colorCodes.get(color) match {
       case Some(colorCode) => (s"\u001b[3${colorCode}m", s"\u001b[3${ctx.color}m", colorCode)
       case None => sys.error("Unsupported tag " + tag)
