@@ -1,12 +1,12 @@
+import sbt.Keys._
 import sbt._
-import Keys._
-import sbtrelease.ReleasePlugin
 
 object BuildSettings {
   val buildSettings = Seq(
     organization := "org.backuity",
     version := "0.1-SNAPSHOT",
     scalaVersion := "2.11.4",
+    version := "1.0-SNAPSHOT",
 
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
 
@@ -62,7 +62,7 @@ object AnsiInterpolatorBuild extends Build {
           // Tests
           "org.backuity" %% "matchete" % "1.10" % "test",
           "com.novocode" % "junit-interface" % "0.11" % "test")
-    ) ++ ReleasePlugin.releaseSettings
+    )
   )
 
   lazy val tests = Project("tests",
