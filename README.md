@@ -1,22 +1,25 @@
 ansi-interpolator
 =================
 
-A scala macro based ansi interpolator.
+A scala (2.11+) macro based ansi interpolator.
 
 It has two advantages over non-macro interpolators:
-   - is faster
+   - is faster and lighter (brings no extra dependency at runtime)
    - detects syntax issues at compile time
 
 # Usage
 
 Add the following dependency to your SBT project:
 
-    "org.backuity" %% "ansi-interpolator" % "1.0" % "compile"
+    "org.backuity" %% "ansi-interpolator" % "1.0" % "provided"
+
+Note about `provided`: see [this stackoverflow answer](http://stackoverflow.com/questions/21515325/add-a-compile-time-only-dependency-in-sbt#answer-21516954)
+      for a better SBT dependency scope.
 
 Import the AnsiFormatter and use the `ansi` interpolator:
 
 ```scala
-import org.backuity.ansi.AnsiFormatter.ansi
+import org.backuity.ansi.AnsiFormatter.FormattedHelper
 
 ansi"Text containing ansi tags such as %bold{bold text} or %underline{can be %yellow{nested}}"
 ```
