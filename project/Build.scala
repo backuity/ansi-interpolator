@@ -5,7 +5,7 @@ object BuildSettings {
   val buildSettings = Seq(
     organization := "org.backuity",
     scalaVersion := "2.11.4",
-    version := "1.1",
+    version := "1.2-SNAPSHOT",
 
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
 
