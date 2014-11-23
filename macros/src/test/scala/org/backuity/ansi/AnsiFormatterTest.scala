@@ -1,7 +1,7 @@
 package org.backuity.ansi
 
 import org.backuity.ansi.AnsiFormatter.AnsiContext
-import org.backuity.matchete.JunitMatchers
+import org.backuity.matchete.{Matcher, JunitMatchers}
 import org.junit.Test
 
 class AnsiFormatterTest extends JunitMatchers {
@@ -24,8 +24,13 @@ class AnsiFormatterTest extends JunitMatchers {
   }
 
   @Test
-  def doublePercentShouldEscapePercent(): Unit = {
+  def doublePercentMustEscapePercent(): Unit = {
     ansiPart("a double %%price", ctx) must_== "a double %price"
+  }
+
+  @Test
+  def aLoneBracketShouldBeLeftVerbatim(): Unit = {
+    ansiPart("a lone } bracket", ctx) must_== "a lone } bracket"
   }
 
   @Test
@@ -36,18 +41,25 @@ class AnsiFormatterTest extends JunitMatchers {
 
   import AnsiFormatter.ParsingError
 
-  @Test
-  def missingOpenBracket(): Unit = {
-    ansiPart("a missing %red bracket", ctx) must throwA[ParsingError]
-      .withMessage("missing '{' for tag red")
+  def throwAParsingErrorWith(offset: Int, message: String) = throwA[ParsingError].`with`("a correct offset and message") {
+    case ParsingError(actualMsg, actualOffset) =>
+      actualOffset must_== offset
+      actualMsg must_== message
   }
 
   @Test
-  def parsingErrorMustReportErrorOffset(): Unit = {
-    ansiPart("an erroneous %xxx{blabla}", ctx) must throwA[ParsingError].like("with correct offset") {
-      case ParsingError(msg, offset) =>
-        offset must_== "an erroneous %".length
-        msg must_== "Unsupported tag xxx"
-    }
+  def missingOpenBracket(): Unit = {
+    ansiPart("a missing %red bracket", ctx) must throwAParsingErrorWith(
+      offset = "a missing %r".length,
+      message = "missing '{' for tag red"
+    )
+  }
+
+  @Test
+  def missingOpenTag(): Unit = {
+    ansiPart("a missing red{bracket} should break", ctx) must throwAParsingErrorWith(
+      offset = "a missing red{bracket}".length,
+      message = "missing open tag"
+    )
   }
 }

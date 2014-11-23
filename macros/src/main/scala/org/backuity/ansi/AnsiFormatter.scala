@@ -97,25 +97,31 @@ object AnsiFormatter {
     str.indexWhere( c => c == '%' || c == '}' ) match {
       case -1 => Nothing(prefix + str)
 
-      case idx if str.charAt(idx) == '%' =>
+      case idx =>
         val before = str.substring(0, idx)
         val after = str.substring(idx + 1)
 
-        if (idx == str.length - 1) {
-          // trailing '%' are left verbatim
-          Nothing(prefix + str)
-        } else if (str.charAt(idx + 1) == ' ') {
-          // '%' followed by whitespace are left verbatim
-          scan(after, prefix = prefix + before + "%")
-        } else if (str.charAt(idx + 1) == '%') {
-          // double '%' are converted into single '%'
-          scan(/* remove a '%' */after.substring(1), prefix = prefix + before + "%")
-        } else {
-          StartTag(prefix + before, after, idx)
-        }
+        if( str.charAt(idx) == '%' ) {
 
-      case idx if str.charAt(idx) == '}' =>
-        CloseTag(prefix + str.substring(0, idx), str.substring(idx + 1), idx)
+          if (idx == str.length - 1) {
+            // trailing '%' are left verbatim
+            Nothing(prefix + str)
+          } else if (str.charAt(idx + 1) == ' ') {
+            // '%' followed by whitespace are left verbatim
+            scan(after, prefix = prefix + before + "%")
+          } else if (str.charAt(idx + 1) == '%') {
+            // double '%' are converted into single '%'
+            scan(/* remove a '%' */after.substring(1), prefix = prefix + before + "%")
+          } else {
+            StartTag(prefix + before, after, idx)
+          }
+        } else { // str.charAt(idx) == '}'
+          if (idx > 0 && str.charAt(idx - 1) == ' ') {
+            scan(after, prefix = prefix + before + "}")
+          } else {
+            CloseTag(prefix + str.substring(0, idx), str.substring(idx + 1), idx)
+          }
+        }
     }
   }
 
@@ -132,7 +138,8 @@ object AnsiFormatter {
                 } else {
                   after
                 }
-                throw ParsingError("missing '{' for tag " + tag, idx + offset)
+                throw ParsingError("missing '{' for tag " + tag,
+                  offset = offset + idx + 2 /* shift to the first letter of the tag */)
 
               case bracketIdx =>
                 val tag = after.substring(0, bracketIdx)
@@ -152,7 +159,14 @@ object AnsiFormatter {
           }
 
       case CloseTag(before, after, idx) =>
-        before + ctx.pop() + ansiPart(after, ctx,
+        val closingTag = try {
+          ctx.pop()
+        } catch {
+          case NonFatal(e) => throw ParsingError(
+            msg = "missing open tag",
+            offset = offset + idx + 1)
+        }
+        before + closingTag + ansiPart(after, ctx,
           offset = offset + idx + 1)
 
       case Nothing(content) => content

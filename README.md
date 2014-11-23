@@ -11,7 +11,7 @@ It has two advantages over non-macro interpolators:
 
 Add the following dependency to your SBT project:
 
-    "org.backuity" %% "ansi-interpolator" % "1.0" % "provided"
+    "org.backuity" %% "ansi-interpolator" % "1.1" % "provided"
 
 Note about `provided`: see [this stackoverflow answer](http://stackoverflow.com/questions/21515325/add-a-compile-time-only-dependency-in-sbt#answer-21516954)
       for a better SBT dependency scope.

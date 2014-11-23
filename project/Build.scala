@@ -60,7 +60,7 @@ object AnsiInterpolatorBuild extends Build {
       libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies ++= Seq(
           // Tests
-          "org.backuity" %% "matchete" % "1.10" % "test",
+          "org.backuity" %% "matchete" % "1.11" % "test",
           "com.novocode" % "junit-interface" % "0.11" % "test")
     )
   )
