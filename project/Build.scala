@@ -4,9 +4,8 @@ import sbt._
 object BuildSettings {
   val buildSettings = Seq(
     organization := "org.backuity",
-    version := "0.1-SNAPSHOT",
     scalaVersion := "2.11.4",
-    version := "1.0-SNAPSHOT",
+    version := "1.1",
 
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
 
