@@ -1,4 +1,4 @@
-ansi-interpolator
+ansi-interpolator [![Build Status](https://travis-ci.org/backuity/ansi-interpolator.png?branch=master)](https://travis-ci.org/backuity/ansi-interpolator)
 =================
 
 A scala (2.11+) macro based ansi interpolator.
