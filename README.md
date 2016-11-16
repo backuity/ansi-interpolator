@@ -1,4 +1,4 @@
-ansi-interpolator [![Build Status](https://travis-ci.org/backuity/ansi-interpolator.png?branch=master)](https://travis-ci.org/backuity/ansi-interpolator)
+ansi-interpolator [![Build Status](https://travis-ci.org/backuity/ansi-interpolator.png?branch=master)](https://travis-ci.org/backuity/ansi-interpolator) [<img src="https://img.shields.io/maven-central/v/org.backuity/ansi-interpolator_2.11*.svg?label=latest%20release%20for%202.11"/>](http://search.maven.org/#search%7Cga%7C1%7Cg%3Aorg.backuity%20a%3Aansi-interpolator_2.11*) [<img src="https://img.shields.io/maven-central/v/org.backuity/ansi-interpolator_2.12*.svg?label=latest%20release%20for%202.12"/>](http://search.maven.org/#search%7Cga%7C1%7Cg%3Aorg.backuity%20a%3Aansi-interpolator_2.12*)
 =================
 
 A scala (2.11+) macro based ansi interpolator.
