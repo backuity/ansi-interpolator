@@ -1,0 +1,6 @@
+language: scala
+
+jdk:
+- oraclejdk8
+
+script: sbt -sbt-version 0.13.13 test
