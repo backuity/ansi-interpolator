@@ -6,7 +6,7 @@ import org.junit.Test
 
 class AnsiFormatterTest extends JunitMatchers {
 
-  import AnsiFormatter.ansiPart
+  import AnsiFormatter.{ansiPart, ParsingError}
   import org.backuity.ansi.{AnsiCodes => Ansi}
 
   val ctx = new AnsiContext
@@ -39,14 +39,6 @@ class AnsiFormatterTest extends JunitMatchers {
     ansiPart("a % alone", ctx) must_== "a % alone"
   }
 
-  import AnsiFormatter.ParsingError
-
-  def throwAParsingErrorWith(offset: Int, message: String) = throwA[ParsingError].`with`("a correct offset and message") {
-    case ParsingError(actualMsg, actualOffset) =>
-      actualOffset must_== offset
-      actualMsg must_== message
-  }
-
   @Test
   def missingOpenBracket(): Unit = {
     ansiPart("a missing %red bracket", ctx) must throwAParsingErrorWith(
@@ -61,5 +53,11 @@ class AnsiFormatterTest extends JunitMatchers {
       offset = "a missing red{bracket}".length,
       message = "missing open tag"
     )
+  }
+
+  def throwAParsingErrorWith(offset: Int, message: String) = throwA[ParsingError].`with`("a correct offset and message") {
+    case ParsingError(actualMsg, actualOffset) =>
+      actualOffset must_== offset
+      actualMsg must_== message
   }
 }
