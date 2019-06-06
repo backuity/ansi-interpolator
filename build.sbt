@@ -5,9 +5,9 @@ lazy val root = (project in file(".")).
   settings(
     organization := "org.backuity",
     name := "ansi-interpolator",
-    scalaVersion := "2.12.0",
-    crossScalaVersions := Seq("2.11.8", "2.12.0"),
-    version := "1.2.0",
+    scalaVersion := "2.13.0-RC3",
+    crossScalaVersions := Seq("2.12.8", "2.13.0-RC3"),
+    version := "1.1.1-SNAPSHOT",
 
     scalacOptions ++= Seq("-deprecation", "-unchecked"),
 
@@ -15,8 +15,8 @@ lazy val root = (project in file(".")).
         "org.scala-lang" % "scala-reflect" % scalaVersion.value,
 
         // Tests
-        "org.backuity" %% "matchete-junit" % "1.28.0" % "test",
-        "com.chuusai" %% "shapeless" % "2.3.2" % "test",
+        "org.backuity" %% "matchete-junit" % "1.29.1" % "test",
+        "com.chuusai" %% "shapeless" % "2.3.3" % "test",
         "com.novocode" % "junit-interface" % "0.11" % "test"),
 
     // Sonatype OSS deployment
@@ -30,8 +30,8 @@ lazy val root = (project in file(".")).
     publishMavenStyle := true,
     publishArtifact in Test := false,
 
-    // replace publish by publishSigned
-    publish := com.typesafe.sbt.pgp.PgpKeys.publishSigned.value,
+    useGpg := true,
+    publish := PgpKeys.publishSigned.value,
 
     pomIncludeRepository := { _ => false},
 
