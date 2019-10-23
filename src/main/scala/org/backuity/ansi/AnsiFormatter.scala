@@ -12,6 +12,10 @@ object AnsiFormatter {
     def ansi(args: Any*): String = macro ansiImpl
   }
 
+  val isWindows = Option(System.getProperty("os.name")).getOrElse("").contains("indows")
+  val forceAnsi = !sys.env.get("ansi-windows-support").getOrElse("").equals("")
+  val disabled = (!sys.env.get("ansi-formatter-disabled").getOrElse("").equals("") || (isWindows && !forceAnsi))
+
   def ansiImpl(c: blackbox.Context)(args: c.Tree*) = {
     import c.universe._
 
@@ -143,7 +147,10 @@ object AnsiFormatter {
 
               case bracketIdx =>
                 val tag = after.substring(0, bracketIdx)
-                val (openCode, closeCode, color) = findCodesFor(tag, ctx)
+                val (openCode, closeCode, color) = disabled match {
+                  case true => ("", "", 0)
+                  case _ => findCodesFor(tag, ctx)
+                }
 
                 // save close code
                 ctx.push(closeCode, color)
