@@ -40,7 +40,19 @@ object AnsiFormatter {
       c.abort(c.prefix.tree.pos, msg)
     }
 
-    q"""StringContext($newParts : _*).standardInterpolator(Predef.identity, Seq(..$args))"""
+    q"""
+      val ansiString  = StringContext($newParts : _*).standardInterpolator(Predef.identity, Seq(..$args))
+      val ansiAllowed = System.console != null && System.getenv.get("TERM") != null
+
+      if (ansiAllowed) {
+        ansiString
+      } else {
+        // remove CSI sequences
+        // https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
+        val csiSequencePattern = "\u001b\\[.*?[\\x40-\\x7E]"
+        ansiString.replaceAll(csiSequencePattern, "")
+      }
+    """
   }
 
   class AnsiContext {
