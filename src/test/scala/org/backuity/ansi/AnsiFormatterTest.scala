@@ -18,6 +18,12 @@ class AnsiFormatterTest extends JunitMatchers {
   }
 
   @Test
+  def removeTagsWhenDisabled(): Unit = {
+    ansiPart("%bold{hey %underline{this} is %yellow{the shit}}", ctx, enabled = false) must_==
+      "hey this is the shit"
+  }
+
+  @Test
   def unclosedTagMustStackClosingTagOnTheContext(): Unit = {
     ansiPart("%bold{hey %underline{you}", ctx) must_== Ansi.BOLD + "hey " + Ansi.UNDERLINE + "you" + Ansi.UNDERLINE_OFF
     ctx.pop() must_== Ansi.BOLD_OFF

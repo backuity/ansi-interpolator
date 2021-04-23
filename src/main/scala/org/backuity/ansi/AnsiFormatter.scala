@@ -12,6 +12,8 @@ object AnsiFormatter {
     def ansi(args: Any*): String = macro ansiImpl
   }
 
+  val conditionalAnsiSupport = !sys.env.getOrElse("conditional-ansi-support", "").equals("")
+
   def ansiImpl(c: blackbox.Context)(args: c.Tree*) = {
     import c.universe._
 
@@ -23,10 +25,9 @@ object AnsiFormatter {
     }
 
     val ansiCtx = new AnsiContext()
-
-    val newParts = for( (part,pos) <- parts ) yield {
+    val newAnsiParts = for( (part,pos) <- parts ) yield {
       try {
-        ansiPart(part, ansiCtx)
+        ansiPart(part, ansiCtx, enabled = true)
       } catch {
         case ParsingError(msg, offset) =>
           c.abort(pos.withPoint(pos.end + offset), msg)
@@ -40,19 +41,22 @@ object AnsiFormatter {
       c.abort(c.prefix.tree.pos, msg)
     }
 
-    q"""
-      val ansiString  = StringContext($newParts : _*).standardInterpolator(Predef.identity, Seq(..$args))
-      val ansiAllowed = System.console != null && System.getenv.get("TERM") != null
+    val noAnsiCtx = new AnsiContext()
+    val noAnsiParts = for( (part, _) <- parts) yield ansiPart(part, noAnsiCtx, enabled = false)
 
-      if (ansiAllowed) {
-        ansiString
-      } else {
-        // remove CSI sequences
-        // https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
-        val csiSequencePattern = "\u001b\\[.*?[\\x40-\\x7E]"
-        ansiString.replaceAll(csiSequencePattern, "")
-      }
-    """
+    if (conditionalAnsiSupport) {
+      q"""
+        val ansiAllowed = System.console != null && System.getenv.get("TERM") != null
+
+        if (ansiAllowed) {
+          StringContext($newAnsiParts : _*).standardInterpolator(Predef.identity, Seq(..$args))
+        } else {
+          StringContext($noAnsiParts : _*).standardInterpolator(Predef.identity, Seq(..$args))
+        }
+      """
+    } else {
+      q"""StringContext($newAnsiParts : _*).standardInterpolator(Predef.identity, Seq(..$args))"""
+    }
   }
 
   class AnsiContext {
@@ -139,7 +143,10 @@ object AnsiFormatter {
 
   case class ParsingError(msg: String, offset: Int) extends Exception(msg)
 
-  def ansiPart(part: String, ctx: AnsiContext, offset: Int = 0) : String = {
+  /**
+   * @param enabled when false, do not produce any ansi code
+   */
+  def ansiPart(part: String, ctx: AnsiContext, enabled: Boolean = true, offset: Int = 0) : String = {
     scan(part) match {
       case StartTag(before, after, idx) =>
         try {
@@ -155,13 +162,14 @@ object AnsiFormatter {
 
               case bracketIdx =>
                 val tag = after.substring(0, bracketIdx)
-                val (openCode, closeCode, color) = findCodesFor(tag, ctx)
+                val (openCode, closeCode, color) =
+                  if (!enabled) ("","",0) else findCodesFor(tag, ctx)
 
                 // save close code
                 ctx.push(closeCode, color)
 
                 // replace tag by ansi code
-                before + openCode + ansiPart(after.substring(bracketIdx + 1), ctx,
+                before + openCode + ansiPart(after.substring(bracketIdx + 1), ctx, enabled,
                   offset = offset + idx + 1 + bracketIdx + 1)
             }
           } catch {
@@ -178,7 +186,7 @@ object AnsiFormatter {
             msg = "missing open tag",
             offset = offset + idx + 1)
         }
-        before + closingTag + ansiPart(after, ctx,
+        before + closingTag + ansiPart(after, ctx, enabled,
           offset = offset + idx + 1)
 
       case Nothing(content) => content

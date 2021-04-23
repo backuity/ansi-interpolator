@@ -47,3 +47,8 @@ And color tags:
 [error]     println(ansi"Please %underlin{underline this : $str}")
 [error]                          ^
 ```
+
+# Disable ansi codes at runtime when they are not supported
+
+Set the environment variable `conditional-ansi-support` to `yes` at compile time
+to produce code that will detect at runtime ansi support (or lack thereof, e.g windows).
