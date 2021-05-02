@@ -10,11 +10,18 @@ object AnsiFormatter {
   implicit class FormattedHelper(val sc: StringContext) extends AnyVal {
 
     def ansi(args: Any*): String = macro ansiImpl
+    def ansiCond(args: Any*): String = macro ansiCondImpl
   }
 
-  val conditionalAnsiSupport = !sys.env.getOrElse("conditional-ansi-support", "").equals("")
-
   def ansiImpl(c: blackbox.Context)(args: c.Tree*) = {
+    gencode(conditionalAnsiSupport = false)(c)(args)
+  }
+
+  def ansiCondImpl(c: blackbox.Context)(args: c.Tree*) = {
+    gencode(conditionalAnsiSupport = true)(c)(args)
+  }
+
+  private def gencode(conditionalAnsiSupport: Boolean)(c: blackbox.Context)(args: Seq[c.Tree]) = {
     import c.universe._
 
     val Apply(_, List(Apply(_, partsTree))) = c.prefix.tree
