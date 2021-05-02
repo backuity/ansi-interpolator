@@ -48,7 +48,11 @@ And color tags:
 [error]                          ^
 ```
 
-# Disable ansi codes at runtime when they are not supported
+# Conditional ANSI codes rendering / Non-ANSI terminals support
 
-Set the environment variable `conditional-ansi-support` to `yes` at compile time
-to produce code that will detect at runtime ansi support (or lack thereof, e.g windows).
+Use `ansiCond"..."` instead of `ansi"..."` to generate code that detects ANSI support (or lack thereof, e.g log files or windows terminal) at runtime.
+If ANSI support isn't detected the `ansiCond` interpolator will output a plain text.
+
+```scala
+ansiCond"%red{Hello}, I'm logs and windows %bold{friendly}"
+```
